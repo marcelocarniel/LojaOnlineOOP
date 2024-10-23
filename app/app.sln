@@ -1,0 +1,196 @@
+﻿// Classe abstrata Produto
+public abstract class Produto
+{
+    public string Nome { get; set; }
+    public string Codigo { get; set; }
+    public decimal Preco { get; set; }
+
+    public Produto(string nome, string codigo, decimal preco)
+    {
+        Nome = nome;
+        Codigo = codigo;
+        Preco = preco;
+    }
+
+    // Método abstrato para calcular o preço final
+    public abstract decimal CalcularPrecoFinal();
+}
+
+// Classe derivada ProdutoFisico
+public class ProdutoFisico : Produto
+{
+    public double Peso { get; set; }
+    public string Categoria { get; set; }
+
+    public ProdutoFisico(string nome, string codigo, decimal preco, double peso, string categoria)
+        : base(nome, codigo, preco)
+    {
+        Peso = peso;
+        Categoria = categoria;
+    }
+
+    public override decimal CalcularPrecoFinal()
+    {
+        decimal taxaImposto = 0.1m; // 10% de imposto
+        decimal custoEnvio = (decimal)(Peso * 2); // Exemplo: custo de envio por peso
+        return Preco + (Preco * taxaImposto) + custoEnvio;
+    }
+}
+
+// Classe derivada ProdutoDigital
+public class ProdutoDigital : Produto
+{
+    public double TamanhoArquivo { get; set; }
+    public string Formato { get; set; }
+
+    public ProdutoDigital(string nome, string codigo, decimal preco, double tamanhoArquivo, string formato)
+        : base(nome, codigo, preco)
+    {
+        TamanhoArquivo = tamanhoArquivo;
+        Formato = formato;
+    }
+
+    public override decimal CalcularPrecoFinal()
+    {
+        decimal desconto = 0.1m; // 10% de desconto
+        return Preco - (Preco * desconto);
+    }
+}
+
+// Classe Cliente
+public class Cliente
+{
+    public string Nome { get; set; }
+    public string NumeroIdentificacao { get; set; }
+    public string Endereco { get; set; }
+    public string Contato { get; set; }
+
+    public Cliente(string nome, string numeroIdentificacao, string endereco, string contato)
+    {
+        Nome = nome;
+        NumeroIdentificacao = numeroIdentificacao;
+        Endereco = endereco;
+        Contato = contato;
+    }
+
+    public void ExibirInformacoes()
+    {
+        Console.WriteLine($"Nome: {Nome}, ID: {NumeroIdentificacao}, Endereço: {Endereco}, Contato: {Contato}");
+    }
+}
+
+// Interface ICarriavel
+public interface ICarriavel
+{
+    void AdicionarProduto(Produto produto);
+    void RemoverProduto(Produto produto);
+    decimal CalcularTotal();
+}
+
+// Classe Pedido que implementa ICarriavel
+public class Pedido : ICarriavel
+{
+    public Cliente Cliente { get; set; }
+    public DateTime DataPedido { get; private set; }
+    public List<Produto> Produtos { get; private set; }
+    public string Status { get; private set; }
+
+    public Pedido(Cliente cliente)
+    {
+        Cliente = cliente;
+        DataPedido = DateTime.Now;
+        Produtos = new List<Produto>();
+        Status = "Em Processamento";
+    }
+
+    public void AdicionarProduto(Produto produto)
+    {
+        Produtos.Add(produto);
+        Console.WriteLine($"Produto {produto.Nome} adicionado ao pedido.");
+    }
+
+    public void RemoverProduto(Produto produto)
+    {
+        Produtos.Remove(produto);
+        Console.WriteLine($"Produto {produto.Nome} removido do pedido.");
+    }
+
+    public decimal CalcularTotal()
+    {
+        decimal total = 0;
+        foreach (var produto in Produtos)
+        {
+            total += produto.CalcularPrecoFinal();
+        }
+        return total;
+    }
+
+    public void FinalizarPedido()
+    {
+        Status = "Concluído";
+        Console.WriteLine("Pedido finalizado.");
+    }
+}
+
+// Classe Loja
+public class Loja
+{
+    public List<Produto> Produtos { get; private set; }
+    public List<Cliente> Clientes { get; private set; }
+
+    public Loja()
+    {
+        Produtos = new List<Produto>();
+        Clientes = new List<Cliente>();
+    }
+
+    public void CadastrarProduto(Produto produto)
+    {
+        Produtos.Add(produto);
+        Console.WriteLine($"Produto {produto.Nome} cadastrado.");
+    }
+
+    public Produto ConsultarProdutoPorCodigo(string codigo)
+    {
+        return Produtos.Find(p => p.Codigo == codigo);
+    }
+
+    public void CadastrarCliente(Cliente cliente)
+    {
+        Clientes.Add(cliente);
+        Console.WriteLine($"Cliente {cliente.Nome} cadastrado.");
+    }
+
+    public Cliente ConsultarClientePorID(string id)
+    {
+        return Clientes.Find(c => c.NumeroIdentificacao == id);
+    }
+}
+
+// Classe Program
+class Program
+{
+    static void Main()
+    {
+        Loja loja = new Loja();
+
+        // Cadastrando produtos
+        Produto produtoFisico = new ProdutoFisico("Smartphone", "P001", 1500m, 0.5, "Eletrônicos");
+        Produto produtoDigital = new ProdutoDigital("E-book", "P002", 50m, 500, "PDF");
+        loja.CadastrarProduto(produtoFisico);
+        loja.CadastrarProduto(produtoDigital);
+
+        // Cadastrando cliente
+        Cliente cliente = new Cliente("João", "123456789", "Rua A, 123", "joao@email.com");
+        loja.CadastrarCliente(cliente);
+
+        // Criando pedido
+        Pedido pedido = new Pedido(cliente);
+        pedido.AdicionarProduto(produtoFisico);
+        pedido.AdicionarProduto(produtoDigital);
+
+        // Calculando total e finalizando pedido
+        Console.WriteLine($"Total do pedido: {pedido.CalcularTotal()}");
+        pedido.FinalizarPedido();
+    }
+}
